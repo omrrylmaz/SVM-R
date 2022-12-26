@@ -1,0 +1,265 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+
+```{r}
+x <- 1:75
+
+y <- (cumsum((rnorm(length(x))))+10)
+
+veri <- data.frame(cbind(x,y))
+```
+
+
+```{r}
+
+makePlot <- function(x,y){
+  
+  plot(x,y,col="red",pch =15,lwd=1)
+  lines(x,y,lty =2,lwd=2)
+  grid()
+  
+}
+
+makePlot(x,y)
+```
+
+
+
+dogrusal reg icin
+```{r}
+
+liner_model <- lm(y~x,data = veri)
+summary(liner_model)
+
+predictLiner <- predict(liner_model,veri)
+
+
+makePlot(x,y)
+abline(liner_model,col = "red")
+```
+
+
+```{r} 
+rmse <- function(errval){
+  
+  val = sqrt(mean(errval^2))
+  return(val)
+  
+}
+
+
+rmse(liner_model$residuals)#mape ye bakmak lazim bu tek basina yeterli degil. bu sadece kiyaslamak ixin
+```
+
+
+```{r}
+mape <- function(errval){
+  
+  val = (mean(abs(errval/y)))*100
+  
+  return(val)
+  
+}
+
+mape(liner_model$residuals) #%y hata ile tahmin ediyor
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+library(e1071)
+
+
+svm_model <- svm(y~x,data = veri)
+
+tahminler <- predict(svm_model, veri)
+```
+
+
+```{r}
+makePlot(x,y)
+abline(liner_model,col="red")
+points(veri$x, tahminler, col="blue",pch =4)
+points(veri$x, tahminler, col="blue",type ="1")
+```
+
+
+
+
+
+rmse
+```{r}
+rmse(svm_model$residuals) #aynisi
+
+a <- veri$y - tahminler #aynisi
+rmse(a)
+```
+
+mape
+```{r}
+
+mape(svm_model$residuals)
+
+```
+
+
+
+
+
+
+grid search
+
+
+```{r}
+
+tuneResult1 <- tune(svm, y ~x, data = veri, 
+                   ranges = list(epsilon = seq(0,1,0.1), cost = 2^(seq(0.5,8,5))))
+#map tuning 
+plot(tuneResult1)
+```
+
+
+
+
+
+```{r}
+print(tuneResult1) #optimal nokta (bolge)
+```
+
+
+daha hassas o bolge uzerinden calisma
+
+
+```{r}
+tuneResult <- tune(svm, y ~x, data = veri, 
+                   ranges = list(
+                     
+                     epsilon = seq(tuneResult1$best.model$epsilon-.015,
+                                   tuneResult1$best.model$epsilon+.015,
+                                   0.01), 
+                                 
+                                 
+                     cost = seq((tuneResult1$best.model$cost)-1,
+                             (tuneResult1$best.model$cost)+1)))
+
+
+plot(tuneResult)
+
+```
+
+en en iyi nokta
+```{r}
+print(tuneResult)
+```
+
+
+
+
+```{r}
+tunedvals <- tuneResult$best.model
+
+tahminler2 <- predict(tunedvals,veri)
+
+makePlot(x,y)
+abline(liner_model, col="red")
+points(veri$x, tahminler, col = "blue", pch = 4)
+points(veri$x, tahminler, col = "blue", type = "1")
+points(veri$x, tahminler2, col = "green", pch = 5)
+points(veri$x, tahminler2, col = "green", type = "1")
+legend("bottomright", c("veri","liner","svm","tune svm"))
+
+```
+
+
+
+
+
+
+
+rmse
+```{r}
+rmse(tuneResult$best.model$residuals)
+```
+
+
+mape
+```{r}
+mape(tuneResult$best.model$residuals)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
